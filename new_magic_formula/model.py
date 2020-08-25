@@ -69,7 +69,9 @@ class Model:
         corp_total = corp_total[corp_total['종목명'].isin(companies)]
         corp_total = corp_total.dropna()
 
-        result_corp = []
+        ticker_list = []
+        name_list = []
+        recommendation_dic = {}
 
         if (period == '단기'):
             corp_total['2020/06 GP/A'] = corp_total['2020/06 매출총이익'] / corp_total['2020/06 자본총계']
@@ -81,7 +83,9 @@ class Model:
             corp_recommendation = corp_total.sort_values(by=['Total Rank'])[:5]
             symbol_list = list(np.array(corp_recommendation['종목코드'].tolist()))
             for symbol in symbol_list:
-                result_corp.append(str(symbol).zfill(6))
+                ticker_list.append(str(symbol).zfill(6))
+            name_list = list(np.array(corp_recommendation['종목명'].tolist()))
+            recommendation_dic = {'종목코드': ticker_list, '종목명': name_list}
 
         if (period == '중기'):
             corp_total['2020/06 GP/A'] = corp_total['2020/06 매출총이익'] / corp_total['2020/06 자본총계']
@@ -99,7 +103,9 @@ class Model:
             corp_recommendation = corp_total.sort_values(by=['Total Rank'])[:5]
             symbol_list = list(np.array(corp_recommendation['종목코드'].tolist()))
             for symbol in symbol_list:
-                result_corp.append(str(symbol).zfill(6))
+                ticker_list.append(str(symbol).zfill(6))
+            name_list = list(np.array(corp_recommendation['종목명'].tolist()))
+            recommendation_dic = {'종목코드': ticker_list, '종목명': name_list}
 
         if (period == '중장기'):
             corp_total['2020/06 GP/A'] = corp_total['2020/06 매출총이익'] / corp_total['2020/06 자본총계']
@@ -123,7 +129,9 @@ class Model:
             corp_recommendation = corp_total.sort_values(by=['Total Rank'])[:5]
             symbol_list = list(np.array(corp_recommendation['종목코드'].tolist()))
             for symbol in symbol_list:
-                result_corp.append(str(symbol).zfill(6))
+                ticker_list.append(str(symbol).zfill(6))
+            name_list = list(np.array(corp_recommendation['종목명'].tolist()))
+            recommendation_dic = {'종목코드': ticker_list, '종목명': name_list}
 
         if (period == '장기'):
             corp_total['2020/06 GP/A'] = corp_total['2020/06 매출총이익'] / corp_total['2020/06 자본총계']
@@ -159,11 +167,43 @@ class Model:
             corp_recommendation = corp_total.sort_values(by=['Total Rank'])[:5]
             symbol_list = list(np.array(corp_recommendation['종목코드'].tolist()))
             for symbol in symbol_list:
-                result_corp.append(str(symbol).zfill(6))
+                ticker_list.append(str(symbol).zfill(6))
+            name_list = list(np.array(corp_recommendation['종목명'].tolist()))
 
-        return result_corp
+            recommendation_dic = {'종목코드': ticker_list, '종목명': name_list}
+
+        return recommendation_dic
+
+    def recommendation_listing(self, period, propensity):
+        recommendation_dic = self.new_magic_formula(period=period, propensity=propensity)
+        ticker_list = recommendation_dic['종목코드']
+        now_price = []
+        change = []
+        change_ratio = []
+
+        for ticker in ticker_list:
+            date = datetime.today().strftime('%Y-%m-%d')
+            df = fdr.DataReader(ticker, date)
+            prev = fdr.DataReader(ticker, date).iloc[0, 0]
+            now = fdr.DataReader(ticker, date).iloc[0, 3]
+            now_price.append(now)
+            change_won = ''
+            if prev - now > 0:
+                change_won = '▲ {}'.format(str(prev - now))
+            elif prev-now == 0:
+                change_won = 0
+            else:
+                change_won = '▼ {}'.format(str(abs(prev - now)))
+            change.append(change_won)
+            change_ratio.append('{}%'.format(round((prev - now) / prev * 100, 2)))
+
+        result = {'종목명': recommendation_dic['종목명'], '현재가': now_price, '전일대비': change, '전일비': change_ratio}
+
+        return result
 
 
-if __name__ == '__main__':
-    model = Model()
-    print(model.new_magic_formula(period='장기', propensity='적극투자형'))
+# if __name__ == '__main__':
+#     model = Model()
+#     result = model.recommendation_listing(period='단기', propensity='안정형')
+#     result_df = pd.DataFrame(result)
+#     print(result_df)
