@@ -4,11 +4,11 @@ import FinanceDataReader as fdr
 from datetime import datetime, timedelta
 
 
-class Model:
+class Recommendation_Stock_Model:
 
     def propensity_classify(self, period):
 
-        corp_total = pd.read_excel('../data/재무제표.xlsx')
+        corp_total = pd.read_excel('data/재무제표.xlsx')
         corp_symbol = list(np.array(corp_total['종목코드'].tolist()))
 
         ticker_list = []
@@ -53,7 +53,7 @@ class Model:
         return propensity
 
     def new_magic_formula(self, period, propensity):
-        corp_total = pd.read_excel('../data/재무제표.xlsx')
+        corp_total = pd.read_excel('data/재무제표.xlsx')
         companies = []
         if (propensity == '안정형'):
             companies = self.propensity_classify(period)['안정형']
@@ -186,7 +186,7 @@ class Model:
             df = fdr.DataReader(ticker, date)
             prev = fdr.DataReader(ticker, date).iloc[0, 0]
             now = fdr.DataReader(ticker, date).iloc[0, 3]
-            now_price.append(now)
+            now_price.append(str(now))
             change_won = ''
             if prev - now > 0:
                 change_won = '▲ {}'.format(str(prev - now))
@@ -200,10 +200,3 @@ class Model:
         result = {'종목명': recommendation_dic['종목명'], '현재가': now_price, '전일대비': change, '전일비': change_ratio}
 
         return result
-
-
-# if __name__ == '__main__':
-#     model = Model()
-#     result = model.recommendation_listing(period='단기', propensity='안정형')
-#     result_df = pd.DataFrame(result)
-#     print(result_df)
