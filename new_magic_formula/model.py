@@ -183,8 +183,7 @@ class Recommendation_Stock_Model:
         symbol = []
 
         for ticker in ticker_list:
-            date = datetime.today().strftime('%Y-%m-%d')
-            df = fdr.DataReader(ticker, date)
+            df = fdr.DataReader(ticker, '2020').sort_index(ascending=False)
             prev = df.iloc[0, 0]
             now = df.iloc[0, 3]
             now_price.append(str(now))
